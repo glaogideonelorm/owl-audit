@@ -2,75 +2,71 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   ScrollView,
+  TouchableOpacity,
   StyleSheet,
   Alert,
   ImageBackground,
+  TextInput,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useTheme } from "@theme/index";
 import { Logo } from "@components/Logo";
 import { PrimaryButton } from "@components/Buttons";
 import { Ionicons } from "@expo/vector-icons";
+import { TrustIndicator } from "@components/TrustIndicator";
 
 type Props = NativeStackScreenProps<any>;
 
 interface FormData {
   fullName: string;
   email: string;
-  businessName: string;
   password: string;
   confirmPassword: string;
+  businessName: string;
 }
 
-interface ValidationErrors {
+interface FormErrors {
   fullName?: string;
   email?: string;
-  businessName?: string;
   password?: string;
   confirmPassword?: string;
+  businessName?: string;
 }
 
 export default function LoginScreen({ navigation }: Props) {
   const { colors, t } = useTheme();
   const [isRegister, setIsRegister] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
-    fullName: "",
-    email: "",
-    businessName: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [errors, setErrors] = useState<ValidationErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    businessName: "",
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
 
-  const validateEmail = (email: string): boolean => {
+  const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const validatePassword = (password: string): boolean => {
+  const validatePassword = (password: string) => {
     return password.length >= 8;
   };
 
-  const validateForm = (): boolean => {
-    const newErrors: ValidationErrors = {};
+  const validateForm = () => {
+    const newErrors: FormErrors = {};
 
     if (isRegister) {
       if (!formData.fullName.trim()) {
         newErrors.fullName = "Full name is required";
-      } else if (formData.fullName.trim().length < 2) {
-        newErrors.fullName = "Full name must be at least 2 characters";
       }
-
       if (!formData.businessName.trim()) {
         newErrors.businessName = "Business name is required";
-      } else if (formData.businessName.trim().length < 2) {
-        newErrors.businessName = "Business name must be at least 2 characters";
       }
     }
 
@@ -101,16 +97,12 @@ export default function LoginScreen({ navigation }: Props) {
   const handleSubmit = () => {
     if (validateForm()) {
       if (isRegister) {
-        Alert.alert(
-          "Success",
-          "Account created successfully! Welcome to Owl Audit.",
-          [
-            {
-              text: "Continue",
-              onPress: () => navigation.navigate("Dashboard"),
-            },
-          ]
-        );
+        Alert.alert("Success", "Account created successfully!", [
+          {
+            text: "Continue",
+            onPress: () => navigation.navigate("Dashboard"),
+          },
+        ]);
       } else {
         Alert.alert("Success", "Welcome back to Owl Audit!", [
           {
@@ -168,21 +160,33 @@ export default function LoginScreen({ navigation }: Props) {
           {/* Tab switcher */}
           <View style={styles.tabContainer}>
             <TouchableOpacity
-              style={[styles.tab, !isRegister && styles.activeTab]}
+              style={[
+                styles.tab,
+                !isRegister && styles.activeTab,
+              ]}
               onPress={() => setIsRegister(false)}
             >
               <Text
-                style={[styles.tabText, !isRegister && styles.activeTabText]}
+                style={[
+                  styles.tabText,
+                  !isRegister && styles.activeTabText,
+                ]}
               >
                 Login
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.tab, isRegister && styles.activeTab]}
+              style={[
+                styles.tab,
+                isRegister && styles.activeTab,
+              ]}
               onPress={() => setIsRegister(true)}
             >
               <Text
-                style={[styles.tabText, isRegister && styles.activeTabText]}
+                style={[
+                  styles.tabText,
+                  isRegister && styles.activeTabText,
+                ]}
               >
                 Register
               </Text>
@@ -320,7 +324,9 @@ export default function LoginScreen({ navigation }: Props) {
                     secureTextEntry={!showConfirmPassword}
                   />
                   <TouchableOpacity
-                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    onPress={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
                     style={styles.eyeIcon}
                   >
                     <Ionicons
@@ -358,6 +364,28 @@ export default function LoginScreen({ navigation }: Props) {
                 </TouchableOpacity>
               </View>
             )}
+
+            {/* Trust Indicators */}
+            <View style={styles.trustSection}>
+              <Text style={[styles.trustTitle, { color: colors.text }]}>
+                Your security is our priority
+              </Text>
+              <TrustIndicator
+                type="encryption"
+                title="Bank-level encryption"
+                description="All data is encrypted using AES-256 encryption"
+              />
+              <TrustIndicator
+                type="compliance"
+                title="GDPR compliant"
+                description="We follow strict data protection regulations"
+              />
+              <TrustIndicator
+                type="security"
+                title="Secure authentication"
+                description="Multi-factor authentication and biometric support"
+              />
+            </View>
 
             {/* Submit button */}
             <TouchableOpacity
@@ -421,30 +449,24 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 60,
     left: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1,
+    zIndex: 10,
+    padding: 8,
   },
   header: {
     paddingTop: 120,
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingBottom: 20,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "700",
     color: "#FFFFFF",
     marginBottom: 8,
-    lineHeight: 34,
   },
   headerSubtitle: {
     fontSize: 16,
-    color: "rgba(255, 255, 255, 0.9)",
-    lineHeight: 24,
+    color: "#E5E7EB",
+    lineHeight: 22,
   },
   formContainer: {
     flex: 1,
@@ -454,8 +476,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   formContainerLogin: {
-    flex: 0, // Don't take all available space
-    minHeight: 450, // Fixed height for login mode to show more background
+    flex: 0.8, // Smaller for login mode
   },
   tabContainer: {
     flexDirection: "row",
@@ -485,6 +506,7 @@ const styles = StyleSheet.create({
   },
   activeTabText: {
     color: "#111827",
+    fontWeight: "600",
   },
   formScrollView: {
     flex: 1,
@@ -563,6 +585,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#3B82F6",
     fontWeight: "500",
+  },
+  trustSection: {
+    marginBottom: 24,
+  },
+  trustTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 16,
+    textAlign: "center",
   },
   submitButton: {
     backgroundColor: "#059669",

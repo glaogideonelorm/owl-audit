@@ -16,6 +16,8 @@ import { Header } from "@components/Header";
 import { Card } from "@components/Card";
 import { Section } from "@components/Section";
 import { PrimaryButton, GhostButton } from "@components/Buttons";
+import { QuickAction } from "@components/QuickAction";
+import { ProgressIndicator } from "@components/ProgressIndicator";
 import { storageService, RecentActivity } from "../services/storageService";
 
 type Props = NativeStackScreenProps<any>;
@@ -23,10 +25,8 @@ type Props = NativeStackScreenProps<any>;
 export default function DashboardScreen({ navigation }: Props) {
   const { colors, t, formatCurrency } = useTheme();
   const [showAIChatbot, setShowAIChatbot] = useState(false);
-  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>(
-    []
-  );
-
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  
   // Animation values
   const [revenueAnim] = useState(new Animated.Value(0));
   const [expensesAnim] = useState(new Animated.Value(0));
@@ -117,6 +117,35 @@ export default function DashboardScreen({ navigation }: Props) {
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays}d ago`;
   };
+
+  // Quick actions data
+  const quickActions = [
+    {
+      id: "1",
+      title: "Start New Audit",
+      subtitle: "Begin a comprehensive business audit",
+      icon: "document-text-outline",
+      color: "#059669",
+      onPress: () => navigation.navigate("StartAudit"),
+    },
+    {
+      id: "2",
+      title: "View Reports",
+      subtitle: "Access your audit reports and insights",
+      icon: "analytics-outline",
+      color: "#3B82F6",
+      onPress: () => navigation.navigate("Report"),
+      badge: "New",
+    },
+    {
+      id: "3",
+      title: "Manage Drafts",
+      subtitle: "Continue or edit saved audit drafts",
+      icon: "folder-open-outline",
+      color: "#F59E0B",
+      onPress: () => navigation.navigate("Drafts"),
+    },
+  ];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -233,92 +262,28 @@ export default function DashboardScreen({ navigation }: Props) {
 
         <View style={{ height: 12 }} />
 
-        {/* Last Audit Status */}
+        {/* Quick Actions - Enhanced for better UX */}
         <Card>
           <Section
-            title={t("last_audit_status")}
-            right={
-              <View style={styles.sectionIcon}>
-                <Ionicons name="document-text" size={20} color="#3B82F6" />
-              </View>
-            }
-          >
-            <View style={styles.auditStatusGrid}>
-              <View style={styles.auditStatusItem}>
-                <View style={styles.auditStatusIcon}>
-                  <Ionicons
-                    name="calendar-outline"
-                    size={16}
-                    color={colors.subtext}
-                  />
-                </View>
-                <View style={styles.auditStatusContent}>
-                  <Text
-                    style={[styles.auditStatusLabel, { color: colors.subtext }]}
-                  >
-                    {t("last_audit_date")}
-                  </Text>
-                  <Text
-                    style={[styles.auditStatusValue, { color: colors.text }]}
-                  >
-                    June 20, 2025
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.auditStatusItem}>
-                <View style={styles.auditStatusIcon}>
-                  <Ionicons
-                    name="time-outline"
-                    size={16}
-                    color={colors.subtext}
-                  />
-                </View>
-                <View style={styles.auditStatusContent}>
-                  <Text
-                    style={[styles.auditStatusLabel, { color: colors.subtext }]}
-                  >
-                    {t("next_audit_due")}
-                  </Text>
-                  <Text
-                    style={[styles.auditStatusValue, { color: colors.text }]}
-                  >
-                    July 20, 2025
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </Section>
-        </Card>
-
-        <View style={{ height: 12 }} />
-
-        {/* Quick Actions */}
-        <Card>
-          <Section
-            title={t("quick_actions")}
+            title="Quick Actions"
+            subtitle="Get started with your audit tasks"
             right={
               <View style={styles.sectionIcon}>
                 <Ionicons name="flash" size={20} color="#F59E0B" />
               </View>
             }
           >
-            <PrimaryButton
-              label={t("start_audit")}
-              onPress={() => navigation.navigate("StartAudit")}
-              leftIcon="document-text-outline"
-            />
-            <View style={{ height: 10 }} />
-            <GhostButton
-              label={t("view_audit_report")}
-              onPress={() => navigation.navigate("Report")}
-              leftIcon="analytics-outline"
-            />
-            <View style={{ height: 10 }} />
-            <GhostButton
-              label={t("drafts")}
-              onPress={() => navigation.navigate("Drafts")}
-              leftIcon="folder-open-outline"
-            />
+            {quickActions.map((action) => (
+              <QuickAction
+                key={action.id}
+                title={action.title}
+                subtitle={action.subtitle}
+                icon={action.icon}
+                color={action.color}
+                onPress={action.onPress}
+                badge={action.badge}
+              />
+            ))}
           </Section>
         </Card>
 
@@ -328,6 +293,7 @@ export default function DashboardScreen({ navigation }: Props) {
         <Card>
           <Section
             title={t("recent_activity")}
+            subtitle="Your latest audit activities"
             right={
               <View style={styles.sectionIcon}>
                 <Ionicons name="time" size={20} color="#8B5CF6" />
@@ -529,33 +495,6 @@ const styles = StyleSheet.create({
   },
   riskSubtext: {
     fontSize: 14,
-  },
-  auditStatusGrid: {
-    gap: 12,
-  },
-  auditStatusItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  auditStatusIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  auditStatusContent: {
-    flex: 1,
-  },
-  auditStatusLabel: {
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  auditStatusValue: {
-    fontSize: 16,
-    fontWeight: "700",
   },
   activitiesList: {
     gap: 12,

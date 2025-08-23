@@ -1,0 +1,6 @@
+# Feature 5: Internationalization
+- Multi-language support (EN/FR)
+- Translation service
+- Reactive language switching
+- Currency formatting
+- Localization context

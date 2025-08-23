@@ -5,6 +5,7 @@ A comprehensive React Native mobile application for business audit management, b
 ## 🚀 Features
 
 ### Core Functionality
+
 - **Dashboard Analytics** - Real-time business performance monitoring
 - **Audit Management** - Complete audit workflow from start to completion
 - **Draft System** - Save and manage audit drafts
@@ -13,6 +14,7 @@ A comprehensive React Native mobile application for business audit management, b
 - **Multi-currency Support** - USD, EUR, GHS, NGN with real-time conversion
 
 ### Advanced Features
+
 - **AI Chatbot Integration** - Intelligent audit assistance
 - **Glassmorphism UI** - Modern, beautiful design with blur effects
 - **Dark/Light Theme** - Complete theme system with persistence
@@ -20,6 +22,7 @@ A comprehensive React Native mobile application for business audit management, b
 - **Offline Support** - Local storage for drafts and activities
 
 ### User Experience
+
 - **Smooth Animations** - Engaging dashboard animations
 - **Form Validation** - Comprehensive input validation
 - **Real-time Updates** - Live activity tracking
@@ -38,11 +41,12 @@ A comprehensive React Native mobile application for business audit management, b
 
 ## 📱 Screenshots
 
-*Screenshots will be added here*
+_Screenshots will be added here_
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js (v16 or higher)
 - npm or yarn
 - Expo CLI
@@ -51,17 +55,20 @@ A comprehensive React Native mobile application for business audit management, b
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/yourusername/owl-audit.git
    cd owl-audit
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Start the development server**
+
    ```bash
    npx expo start
    ```
@@ -87,6 +94,7 @@ src/
 ## 🎨 Design System
 
 ### Colors
+
 - **Primary**: #059669 (Green)
 - **Secondary**: #3B82F6 (Blue)
 - **Success**: #10B981 (Green)
@@ -94,6 +102,7 @@ src/
 - **Error**: #EF4444 (Red)
 
 ### Typography
+
 - **Headings**: Inter, 700 weight
 - **Body**: Inter, 400 weight
 - **Monospace**: JetBrains Mono
@@ -101,17 +110,21 @@ src/
 ## 🔧 Configuration
 
 ### Environment Variables
+
 Create a `.env` file in the root directory:
+
 ```env
 EXPO_PUBLIC_API_URL=your_api_url_here
 ```
 
 ### Theme Configuration
+
 Modify `src/theme/index.tsx` to customize colors and styling.
 
 ## 📊 Features in Detail
 
 ### Dashboard
+
 - Real-time business metrics
 - Animated counters
 - Risk assessment visualization
@@ -119,12 +132,14 @@ Modify `src/theme/index.tsx` to customize colors and styling.
 - Recent activity feed
 
 ### Audit Management
+
 - Step-by-step audit process
 - Document upload support
 - Progress tracking
 - Draft saving functionality
 
 ### AI Integration
+
 - Intelligent chatbot assistance
 - File and image upload support
 - Context-aware responses
