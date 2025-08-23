@@ -1,0 +1,7 @@
+# Feature 6: AI Chatbot Integration
+- Floating chat bubble
+- Draggable interface
+- File upload support
+- Image picker integration
+- Context-aware responses
+- Glassmorphism design
