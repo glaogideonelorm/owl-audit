@@ -1,5 +1,0 @@
-# Feature 2: Theme System
-- Dark/Light mode implementation
-- Color palette configuration
-- Theme context provider
-- AsyncStorage persistence
