@@ -198,6 +198,12 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
       "Streamline audit management and enhance organizational oversight",
     ai_powered_platform:
       "The ultimate AI-powered audit management platform designed to revolutionize your audit processes and supercharge your audit intelligence",
+
+    // Settings translations
+    settings: "Settings",
+    toggle_theme: "Toggle theme",
+    select_currency: "Select Currency",
+    select_language: "Select Language",
     get_started: "Get Started",
     start_free_trial: "Start Free Trial",
 
@@ -398,6 +404,13 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
       "Optimisez la gestion d'audit et renforcez la surveillance organisationnelle",
     ai_powered_platform:
       "La plateforme ultime de gestion d'audit alimentée par l'IA, conçue pour révolutionner vos processus d'audit et dynamiser votre intelligence d'audit",
+
+    // Settings translations (French)
+    settings: "Paramètres",
+    toggle_theme: "Basculer le thème",
+    select_currency: "Sélectionner la devise",
+    select_language: "Sélectionner la langue",
+
     get_started: "Commencer",
     start_free_trial: "Démarrer l'essai gratuit",
 

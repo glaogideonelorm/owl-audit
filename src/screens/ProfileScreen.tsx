@@ -6,14 +6,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Modal,
+  Image,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useTheme } from "@theme/index";
 import { Ionicons } from "@expo/vector-icons";
-import { Header } from "@components/Header";
 import { Card } from "@components/Card";
-import { ToggleRow } from "@components/ToggleRow";
 import { ListItem } from "@components/ListItem";
+import { ToggleRow } from "@components/ToggleRow";
 import { currencyService } from "../services/currencyService";
 import { i18nService } from "../services/i18nService";
 
@@ -22,16 +23,21 @@ type Props = NativeStackScreenProps<any>;
 export default function ProfileScreen({ navigation }: Props) {
   const {
     colors,
-    darkMode,
-    toggleTheme,
+    t,
     currency,
     setCurrency,
     language,
     setLanguage,
-    t,
+    darkMode,
+    toggleTheme,
   } = useTheme();
   const [showCurrencyPicker, setShowCurrencyPicker] = useState(false);
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
+
+  // New state for additional settings
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const [emailReports, setEmailReports] = useState(true);
+  const [autoBackup, setAutoBackup] = useState(true);
 
   const handleSignOut = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -40,7 +46,7 @@ export default function ProfileScreen({ navigation }: Props) {
         text: "Sign Out",
         style: "destructive",
         onPress: () => {
-          // Navigate back to login screen
+          // Reset navigation to Welcome screen
           navigation.reset({
             index: 0,
             routes: [{ name: "Welcome" }],
@@ -50,302 +56,410 @@ export default function ProfileScreen({ navigation }: Props) {
     ]);
   };
 
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to permanently delete your account? This action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            Alert.alert("Info", "Delete account functionality coming soon!");
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Header
-        title={t("profile")}
-        showBack
-        onBack={() => navigation.goBack()}
-      />
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Profile Header */}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* User Profile Section */}
         <Card>
-          <View style={styles.profileHeader}>
-            <View style={styles.profileImage}>
-              <Ionicons name="person" size={40} color={colors.primary} />
+          <View style={styles.profileSection}>
+            <View style={styles.profileImageContainer}>
+              <View
+                style={[
+                  styles.profileImage,
+                  { backgroundColor: colors.primary + "20" },
+                ]}
+              >
+                <Ionicons name="person" size={40} color={colors.primary} />
+              </View>
             </View>
-            <View style={styles.profileInfo}>
-              <Text style={[styles.profileName, { color: colors.text }]}>
-                John Doe
+            <Text style={[styles.profileName, { color: colors.text }]}>
+              Enock Brown
+            </Text>
+            <Text style={[styles.profileEmail, { color: colors.subtext }]}>
+              Enockbrown@audit.com
+            </Text>
+            <Text style={[styles.profileType, { color: colors.subtext }]}>
+              Business Pro User
+            </Text>
+            <TouchableOpacity
+              style={styles.editProfileButton}
+              onPress={() =>
+                Alert.alert("Info", "Edit profile functionality coming soon!")
+              }
+            >
+              <Text style={[styles.editProfileText, { color: colors.primary }]}>
+                Edit Profile
               </Text>
-              <Text style={[styles.profileEmail, { color: colors.subtext }]}>
-                john.doe@owlaudit.com
-              </Text>
-              <Text style={[styles.profileRole, { color: colors.subtext }]}>
-                Business Owner
-              </Text>
-            </View>
+              <Ionicons
+                name="chevron-forward"
+                size={16}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
           </View>
         </Card>
 
-        {/* Preferences */}
+        <View style={{ height: 16 }} />
+
+        {/* Notification Section */}
         <Card>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t("preferences")}
+            Notification
           </Text>
-          <ToggleRow
-            label={t("dark_mode")}
-            value={darkMode}
-            onChange={toggleTheme}
-          />
-          <ListItem
-            title={t("currency")}
-            subtitle={`${currencyService.getCurrencyInfo(currency).symbol} ${
-              currencyService.getCurrencyInfo(currency).name
-            }`}
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <Ionicons name="notifications" size={20} color={colors.primary} />
+              <Text style={[styles.settingText, { color: colors.text }]}>
+                Push Notification
+              </Text>
+            </View>
+            <ToggleRow
+              label=""
+              value={pushNotifications}
+              onChange={setPushNotifications}
+            />
+          </View>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <Ionicons name="mail" size={20} color={colors.primary} />
+              <Text style={[styles.settingText, { color: colors.text }]}>
+                Email Reports
+              </Text>
+            </View>
+            <ToggleRow
+              label=""
+              value={emailReports}
+              onChange={setEmailReports}
+            />
+          </View>
+        </Card>
+
+        <View style={{ height: 16 }} />
+
+        {/* Data & Privacy Section */}
+        <Card>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Data & Privacy
+          </Text>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <Ionicons name="cloud-upload" size={20} color={colors.primary} />
+              <Text style={[styles.settingText, { color: colors.text }]}>
+                Auto Backup
+              </Text>
+            </View>
+            <ToggleRow label="" value={autoBackup} onChange={setAutoBackup} />
+          </View>
+
+          <TouchableOpacity style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <Ionicons
+                name="shield-checkmark"
+                size={20}
+                color={colors.primary}
+              />
+              <Text style={[styles.settingText, { color: colors.text }]}>
+                Privacy Policy
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.subtext} />
+          </TouchableOpacity>
+        </Card>
+
+        <View style={{ height: 16 }} />
+
+        {/* Preferences Section */}
+        <Card>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Preferences
+          </Text>
+
+          <View style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <Ionicons name="moon" size={20} color={colors.primary} />
+              <Text style={[styles.settingText, { color: colors.text }]}>
+                Dark Mode
+              </Text>
+            </View>
+            <ToggleRow label="" value={darkMode} onChange={toggleTheme} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.settingRow}
             onPress={() => setShowCurrencyPicker(true)}
-            right={
+          >
+            <View style={styles.settingLeft}>
+              <Ionicons name="cash" size={20} color={colors.primary} />
+              <Text style={[styles.settingText, { color: colors.text }]}>
+                Currency
+              </Text>
+            </View>
+            <View style={styles.settingRight}>
+              <Text style={[styles.settingValue, { color: colors.subtext }]}>
+                {currencyService.getCurrencyInfo(currency).name}
+              </Text>
               <Ionicons
                 name="chevron-forward"
                 size={20}
                 color={colors.subtext}
               />
-            }
-          />
-          <ListItem
-            title={t("language")}
-            subtitle={i18nService.getLanguageInfo(language).name}
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.settingRow}
             onPress={() => setShowLanguagePicker(true)}
-            right={
+          >
+            <View style={styles.settingLeft}>
+              <Ionicons name="language" size={20} color={colors.primary} />
+              <Text style={[styles.settingText, { color: colors.text }]}>
+                Language
+              </Text>
+            </View>
+            <View style={styles.settingRight}>
+              <Text style={[styles.settingValue, { color: colors.subtext }]}>
+                {i18nService.getLanguageInfo(language).name}
+              </Text>
               <Ionicons
                 name="chevron-forward"
                 size={20}
                 color={colors.subtext}
               />
-            }
-          />
+            </View>
+          </TouchableOpacity>
         </Card>
 
-        {/* Subscription */}
-        <Card>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t("subscription")}
-          </Text>
-          <ListItem
-            title={t("business_pro")}
-            subtitle={t("next_billing")}
-            onPress={() =>
-              Alert.alert("Info", "Subscription management coming soon!")
-            }
-            right={
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={colors.subtext}
-              />
-            }
-          />
-          <ListItem
-            title={t("manage_subscription")}
-            onPress={() =>
-              Alert.alert("Info", "Subscription management coming soon!")
-            }
-            right={
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={colors.subtext}
-              />
-            }
-          />
-          <ListItem
-            title={t("view_plans")}
-            onPress={() => Alert.alert("Info", "View plans coming soon!")}
-            right={
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={colors.subtext}
-              />
-            }
-          />
-        </Card>
+        <View style={{ height: 16 }} />
 
-        {/* Support */}
+        {/* Subscription Section */}
         <Card>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            {t("support")}
+            Subscription
           </Text>
-          <ListItem
-            title={t("help_center")}
-            onPress={() => Alert.alert("Info", "Help center coming soon!")}
-            right={
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={colors.subtext}
-              />
-            }
-          />
-          <ListItem
-            title={t("contact_support")}
-            onPress={() => Alert.alert("Info", "Contact support coming soon!")}
-            right={
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={colors.subtext}
-              />
-            }
-          />
-        </Card>
 
-        {/* Account Actions */}
-        <Card>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Account
-          </Text>
-          <ListItem
-            title={t("edit_profile")}
-            onPress={() => Alert.alert("Info", "Edit profile coming soon!")}
-            right={
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color={colors.subtext}
-              />
-            }
-          />
-          <ListItem
-            title={t("sign_out")}
-            onPress={handleSignOut}
-            right={
-              <Ionicons
-                name="log-out-outline"
-                size={20}
-                color={colors.danger}
-              />
-            }
-          />
-          <ListItem
-            title={t("delete_account")}
-            onPress={() => Alert.alert("Info", "Delete account coming soon!")}
-            right={
-              <Ionicons name="trash-outline" size={20} color={colors.danger} />
-            }
-          />
-        </Card>
-
-        {/* Developer Section */}
-        <Card>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>
-            Developer
-          </Text>
-          <ListItem
-            title="AI Features Status"
-            subtitle="Active"
-            right={
-              <View
-                style={[
-                  styles.statusBadge,
-                  { backgroundColor: colors.success + "20" },
-                ]}
-              >
-                <Text style={[styles.statusText, { color: colors.success }]}>
-                  ON
+          <View style={styles.subscriptionRow}>
+            <View style={styles.settingLeft}>
+              <Ionicons name="card" size={20} color={colors.primary} />
+              <View style={styles.subscriptionInfo}>
+                <Text style={[styles.settingText, { color: colors.text }]}>
+                  Business Pro
+                </Text>
+                <Text
+                  style={[styles.subscriptionDate, { color: colors.subtext }]}
+                >
+                  Next billing : July 10, 2024
                 </Text>
               </View>
+            </View>
+            <Text style={[styles.subscriptionPrice, { color: colors.primary }]}>
+              GHC 300/mon
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.primaryButton, { backgroundColor: colors.primary }]}
+            onPress={() =>
+              Alert.alert(
+                "Info",
+                "Manage subscription functionality coming soon!"
+              )
             }
-          />
-          <ListItem
-            title="App Version"
-            subtitle="1.0.0"
-            right={
-              <Ionicons
-                name="information-circle-outline"
-                size={20}
-                color={colors.subtext}
-              />
+          >
+            <Text style={[styles.primaryButtonText, { color: "white" }]}>
+              Manage Subscription
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.secondaryButton, { borderColor: colors.primary }]}
+            onPress={() =>
+              Alert.alert("Info", "View plans functionality coming soon!")
             }
-          />
-          <ListItem
-            title="Build Number"
-            subtitle="2025.1.0"
-            right={
-              <Ionicons
-                name="information-circle-outline"
-                size={20}
-                color={colors.subtext}
-              />
-            }
-          />
+          >
+            <Text
+              style={[styles.secondaryButtonText, { color: colors.primary }]}
+            >
+              View Plans
+            </Text>
+          </TouchableOpacity>
         </Card>
+
+        <View style={{ height: 16 }} />
+
+        {/* Support Section */}
+        <Card>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
+            Support
+          </Text>
+
+          <TouchableOpacity style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <Ionicons name="help-circle" size={20} color={colors.primary} />
+              <Text style={[styles.settingText, { color: colors.text }]}>
+                Help Center
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.subtext} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <Ionicons name="chatbubble" size={20} color={colors.primary} />
+              <Text style={[styles.settingText, { color: colors.text }]}>
+                Contact Support
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.subtext} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.settingRow}>
+            <View style={styles.settingLeft}>
+              <Ionicons name="mail" size={20} color={colors.primary} />
+              <Text style={[styles.settingText, { color: colors.text }]}>
+                Contact Support
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.subtext} />
+          </TouchableOpacity>
+        </Card>
+
+        <View style={{ height: 16 }} />
+
+        {/* Account Actions */}
+        <TouchableOpacity
+          style={[styles.signOutButton, { borderColor: colors.border }]}
+          onPress={handleSignOut}
+        >
+          <Text style={[styles.signOutText, { color: colors.primary }]}>
+            Sign Out
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.deleteAccountButton}
+          onPress={handleDeleteAccount}
+        >
+          <Text style={[styles.deleteAccountText, { color: colors.danger }]}>
+            Delete Account
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Currency Picker Modal */}
-      {showCurrencyPicker && (
+      <Modal
+        visible={showCurrencyPicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowCurrencyPicker(false)}
+      >
         <View style={styles.modalOverlay}>
           <View
             style={[styles.modalContent, { backgroundColor: colors.cardBg }]}
           >
             <Text style={[styles.modalTitle, { color: colors.text }]}>
-              {t("currency")}
+              {t("select_currency")}
             </Text>
-            {currencyService.getAllCurrencies().map((curr) => (
+            {["USD", "EUR", "NGN", "GHS"].map((curr) => (
               <TouchableOpacity
-                key={curr.code}
-                style={styles.modalItem}
+                key={curr}
+                style={[
+                  styles.currencyOption,
+                  currency === curr && {
+                    backgroundColor: colors.primary + "20",
+                  },
+                ]}
                 onPress={() => {
-                  setCurrency(curr.code);
+                  setCurrency(curr as any);
                   setShowCurrencyPicker(false);
                 }}
               >
-                <Text style={[styles.modalItemText, { color: colors.text }]}>
-                  {curr.symbol} {curr.name}
+                <Text style={[styles.currencyText, { color: colors.text }]}>
+                  {curr}
                 </Text>
-                {currency === curr.code && (
-                  <Ionicons name="checkmark" size={20} color="#16A34A" />
+                {currency === curr && (
+                  <Ionicons name="checkmark" size={20} color={colors.primary} />
                 )}
               </TouchableOpacity>
             ))}
             <TouchableOpacity
-              style={[styles.modalButton, { backgroundColor: colors.border }]}
+              style={styles.cancelButton}
               onPress={() => setShowCurrencyPicker(false)}
             >
-              <Text style={{ color: colors.text }}>{t("cancel")}</Text>
+              <Text style={[styles.cancelText, { color: colors.subtext }]}>
+                Cancel
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
-      )}
+      </Modal>
 
       {/* Language Picker Modal */}
-      {showLanguagePicker && (
+      <Modal
+        visible={showLanguagePicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowLanguagePicker(false)}
+      >
         <View style={styles.modalOverlay}>
           <View
             style={[styles.modalContent, { backgroundColor: colors.cardBg }]}
           >
             <Text style={[styles.modalTitle, { color: colors.text }]}>
-              {t("language")}
+              {t("select_language")}
             </Text>
-            {i18nService.getAllLanguages().map((lang) => (
+            {["English", "Français"].map((lang) => (
               <TouchableOpacity
-                key={lang.code}
-                style={styles.modalItem}
+                key={lang}
+                style={[
+                  styles.currencyOption,
+                  i18nService.getLanguageInfo(language).name === lang && {
+                    backgroundColor: colors.primary + "20",
+                  },
+                ]}
                 onPress={() => {
-                  setLanguage(lang.code);
+                  setLanguage(lang === "English" ? "en" : "fr");
                   setShowLanguagePicker(false);
                 }}
               >
-                <Text style={[styles.modalItemText, { color: colors.text }]}>
-                  {lang.flag} {lang.name}
+                <Text style={[styles.currencyText, { color: colors.text }]}>
+                  {lang}
                 </Text>
-                {language === lang.code && (
-                  <Ionicons name="checkmark" size={20} color="#16A34A" />
+                {i18nService.getLanguageInfo(language).name === lang && (
+                  <Ionicons name="checkmark" size={20} color={colors.primary} />
                 )}
               </TouchableOpacity>
             ))}
             <TouchableOpacity
-              style={[styles.modalButton, { backgroundColor: colors.border }]}
+              style={styles.cancelButton}
               onPress={() => setShowLanguagePicker(false)}
             >
-              <Text style={{ color: colors.text }}>{t("cancel")}</Text>
+              <Text style={[styles.cancelText, { color: colors.subtext }]}>
+                Cancel
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
-      )}
+      </Modal>
     </View>
   );
 }
@@ -356,70 +470,153 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
+    paddingBottom: 32,
   },
-  profileHeader: {
-    flexDirection: "row",
+  profileSection: {
     alignItems: "center",
+    padding: 20,
+  },
+  profileImageContainer: {
+    marginBottom: 16,
   },
   profileImage: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: "rgba(5, 150, 105, 0.1)",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 16,
-  },
-  profileInfo: {
-    flex: 1,
   },
   profileName: {
     fontSize: 20,
     fontWeight: "700",
     marginBottom: 4,
+    textAlign: "center",
   },
   profileEmail: {
     fontSize: 14,
-    marginBottom: 2,
+    marginBottom: 4,
+    textAlign: "center",
   },
-  profileRole: {
+  profileType: {
     fontSize: 14,
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  editProfileButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  editProfileText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "700",
     marginBottom: 16,
+    paddingHorizontal: 20,
   },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  settingRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0, 0, 0, 0.05)",
   },
-  statusText: {
+  settingLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  settingText: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  settingRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  settingValue: {
+    fontSize: 14,
+  },
+  subscriptionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0, 0, 0, 0.05)",
+  },
+  subscriptionInfo: {
+    gap: 2,
+  },
+  subscriptionDate: {
     fontSize: 12,
+  },
+  subscriptionPrice: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  primaryButton: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  secondaryButton: {
+    marginHorizontal: 20,
+    marginTop: 8,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  secondaryButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  signOutButton: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  signOutText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  deleteAccountButton: {
+    marginHorizontal: 20,
+    marginTop: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  deleteAccountText: {
+    fontSize: 16,
     fontWeight: "600",
   },
   modalOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
   },
   modalContent: {
-    width: "100%",
-    maxWidth: 300,
+    width: "80%",
     borderRadius: 16,
     padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
   },
   modalTitle: {
     fontSize: 18,
@@ -427,22 +624,26 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: "center",
   },
-  modalItem: {
+  currencyOption: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     borderRadius: 8,
     marginBottom: 8,
   },
-  modalItemText: {
+  currencyText: {
     fontSize: 16,
+    fontWeight: "500",
   },
-  modalButton: {
+  cancelButton: {
+    marginTop: 16,
     paddingVertical: 12,
-    borderRadius: 8,
     alignItems: "center",
-    marginTop: 8,
+  },
+  cancelText: {
+    fontSize: 16,
+    fontWeight: "500",
   },
 });

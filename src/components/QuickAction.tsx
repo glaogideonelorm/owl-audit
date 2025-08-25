@@ -28,7 +28,7 @@ export const QuickAction: React.FC<QuickActionProps> = ({
     <TouchableOpacity
       style={[
         styles.container,
-        { 
+        {
           backgroundColor: colors.cardBg,
           opacity: disabled ? 0.6 : 1,
         },

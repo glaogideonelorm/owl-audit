@@ -12,17 +12,34 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "We use the microphone to transcribe your speech for the AI chatbot.",
+        "NSSpeechRecognitionUsageDescription": "We transcribe your speech to text to fill the input field in the AI chatbot.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.gideon12345.businessauditdemo"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "RECORD_AUDIO"
+      ],
+      "package": "com.gideon12345.businessauditdemo"
     },
     "web": {
       "bundler": "metro",
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "856f87d1-06b0-443c-90d7-7250c94dd408"
+      }
+    },
+    "owner": "gideon12345"
   }
 }

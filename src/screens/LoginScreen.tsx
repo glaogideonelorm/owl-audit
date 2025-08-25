@@ -160,33 +160,21 @@ export default function LoginScreen({ navigation }: Props) {
           {/* Tab switcher */}
           <View style={styles.tabContainer}>
             <TouchableOpacity
-              style={[
-                styles.tab,
-                !isRegister && styles.activeTab,
-              ]}
+              style={[styles.tab, !isRegister && styles.activeTab]}
               onPress={() => setIsRegister(false)}
             >
               <Text
-                style={[
-                  styles.tabText,
-                  !isRegister && styles.activeTabText,
-                ]}
+                style={[styles.tabText, !isRegister && styles.activeTabText]}
               >
                 Login
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[
-                styles.tab,
-                isRegister && styles.activeTab,
-              ]}
+              style={[styles.tab, isRegister && styles.activeTab]}
               onPress={() => setIsRegister(true)}
             >
               <Text
-                style={[
-                  styles.tabText,
-                  isRegister && styles.activeTabText,
-                ]}
+                style={[styles.tabText, isRegister && styles.activeTabText]}
               >
                 Register
               </Text>
@@ -324,9 +312,7 @@ export default function LoginScreen({ navigation }: Props) {
                     secureTextEntry={!showConfirmPassword}
                   />
                   <TouchableOpacity
-                    onPress={() =>
-                      setShowConfirmPassword(!showConfirmPassword)
-                    }
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                     style={styles.eyeIcon}
                   >
                     <Ionicons

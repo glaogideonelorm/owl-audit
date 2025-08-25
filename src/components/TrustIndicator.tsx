@@ -48,7 +48,9 @@ export const TrustIndicator: React.FC<TrustIndicatorProps> = ({
 
   return (
     <View style={[styles.container, { backgroundColor: colors.cardBg }]}>
-      <View style={[styles.iconContainer, { backgroundColor: getColor() + "20" }]}>
+      <View
+        style={[styles.iconContainer, { backgroundColor: getColor() + "20" }]}
+      >
         <Ionicons name={getIcon()} size={24} color={getColor()} />
       </View>
       <View style={styles.content}>

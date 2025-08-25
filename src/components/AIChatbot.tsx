@@ -1,123 +1,135 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
   StyleSheet,
+  TouchableOpacity,
+  Modal,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
-  Modal,
   Alert,
-  PanGestureHandler,
-  State,
+  ActivityIndicator,
+  TextInput,
+  FlatList,
+  Keyboard,
+  Dimensions,
+  Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@theme/index";
+import GeminiService from "../services/geminiService";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
-import { PanGestureHandler as RNGHPanGestureHandler } from "react-native-gesture-handler";
+import { SpeechToText } from "./SpeechToText";
+
+interface AIChatbotProps {
+  visible: boolean;
+  onClose: () => void;
+  isOnline: boolean;
+}
 
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
-  attachments?: Array<{
-    name: string;
-    type: "image" | "document";
-    uri: string;
-  }>;
+  attachments?: Attachment[];
 }
 
-interface AIChatbotProps {
-  isVisible: boolean;
-  onClose: () => void;
-  apiKey?: string;
+interface Attachment {
+  id: string;
+  type: "image" | "document" | "audio";
+  name: string;
+  uri: string;
+  size?: number;
 }
 
 export const AIChatbot: React.FC<AIChatbotProps> = ({
-  isVisible,
+  visible,
   onClose,
-  apiKey,
+  isOnline,
 }) => {
-  const { t, colors } = useTheme();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      text: t("ai_welcome_message"),
-      isUser: false,
-      timestamp: new Date(),
-    },
-  ]);
+  const { colors, t } = useTheme();
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [showAttachments, setShowAttachments] = useState(false);
-  const [bubblePosition, setBubblePosition] = useState({ x: 20, y: 100 });
-  const scrollViewRef = useRef<ScrollView>(null);
+  const [requestCount, setRequestCount] = useState(0);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const flatListRef = useRef<FlatList>(null);
+  const inputRef = useRef<TextInput>(null);
 
-  const sendMessage = async () => {
-    if (!inputText.trim() && !showAttachments) return;
-
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      text: inputText.trim(),
-      isUser: true,
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
-    setInputText("");
-    setIsLoading(true);
-
-    try {
-      const response = await generateAIResponse(newMessage.text, apiKey);
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response,
+  // Initialize with welcome message
+  useEffect(() => {
+    if (visible && messages.length === 0) {
+      const welcomeMessage: Message = {
+        id: "welcome",
+        text: t("ai_welcome_message"),
         isUser: false,
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, aiMessage]);
-    } catch (error) {
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: t("ai_error_message"),
-        isUser: false,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
+      setMessages([welcomeMessage]);
     }
+  }, [visible, messages.length, t]);
+
+  // Request permissions
+  useEffect(() => {
+    (async () => {
+      const { status: cameraStatus } =
+        await ImagePicker.requestCameraPermissionsAsync();
+      const { status: mediaStatus } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (cameraStatus !== "granted" || mediaStatus !== "granted") {
+        Alert.alert(
+          "Permissions Required",
+          "Camera and media library permissions are needed for full functionality."
+        );
+      }
+    })();
+  }, []);
+
+  // Keyboard listeners
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      () => {
+        setKeyboardVisible(true);
+        setShowAttachmentMenu(false);
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener?.remove();
+      keyboardDidHideListener?.remove();
+    };
+  }, []);
+
+  // Auto-scroll to bottom when new messages are added
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages]);
+
+  const handleSpeechTranscription = (text: string) => {
+    setInputText(text);
   };
 
-  const generateAIResponse = async (
-    message: string,
-    apiKey?: string
-  ): Promise<string> => {
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    const lowerMessage = message.toLowerCase();
-
-    if (lowerMessage.includes("audit") || lowerMessage.includes("report")) {
-      return t("ai_audit_response");
-    } else if (
-      lowerMessage.includes("risk") ||
-      lowerMessage.includes("security")
-    ) {
-      return t("ai_risk_response");
-    } else if (
-      lowerMessage.includes("help") ||
-      lowerMessage.includes("support")
-    ) {
-      return t("ai_help_response");
-    } else {
-      return t("ai_general_response");
-    }
+  const handlePartialTranscription = (text: string) => {
+    // Optionally show partial text in a different way
+    console.log("Partial transcription:", text);
   };
 
   const pickDocument = async () => {
@@ -125,6 +137,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
       const result = await DocumentPicker.getDocumentAsync({
         type: [
           "application/pdf",
+          "text/*",
           "application/msword",
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         ],
@@ -133,23 +146,19 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
 
       if (!result.canceled && result.assets[0]) {
         const file = result.assets[0];
-        const attachmentMessage: Message = {
+        const attachment: Attachment = {
           id: Date.now().toString(),
-          text: `📎 ${file.name}`,
-          isUser: true,
-          timestamp: new Date(),
-          attachments: [
-            {
-              name: file.name,
-              type: "document",
-              uri: file.uri,
-            },
-          ],
+          type: "document",
+          name: file.name,
+          uri: file.uri,
+          size: file.size,
         };
-        setMessages((prev) => [...prev, attachmentMessage]);
-        setShowAttachments(false);
+
+        setInputText((prev) => prev + `\n📎 Attached: ${file.name}`);
+        setShowAttachmentMenu(false);
       }
-    } catch (error) {
+    } catch (err) {
+      console.error("Error picking document:", err);
       Alert.alert("Error", "Failed to pick document");
     }
   };
@@ -165,314 +174,478 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
 
       if (!result.canceled && result.assets[0]) {
         const image = result.assets[0];
-        const attachmentMessage: Message = {
+        const attachment: Attachment = {
           id: Date.now().toString(),
-          text: `📷 Image uploaded`,
-          isUser: true,
-          timestamp: new Date(),
-          attachments: [
-            {
-              name: "image.jpg",
-              type: "image",
-              uri: image.uri,
-            },
-          ],
+          type: "image",
+          name: "Image",
+          uri: image.uri,
         };
-        setMessages((prev) => [...prev, attachmentMessage]);
-        setShowAttachments(false);
+
+        setInputText((prev) => prev + `\n📷 Image attached`);
+        setShowAttachmentMenu(false);
       }
-    } catch (error) {
+    } catch (err) {
+      console.error("Error picking image:", err);
       Alert.alert("Error", "Failed to pick image");
     }
   };
 
-  const onGestureEvent = (event: any) => {
-    const { translationX, translationY } = event.nativeEvent;
-    setBubblePosition((prev) => ({
-      x: prev.x + translationX,
-      y: prev.y + translationY,
-    }));
-  };
+  const takePhoto = async () => {
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
 
-  const onHandlerStateChange = (event: any) => {
-    if (event.nativeEvent.state === State.END) {
-      // Snap to edges if needed
-      const { x, y } = bubblePosition;
-      const screenWidth = 400; // Approximate screen width
-      const screenHeight = 800; // Approximate screen height
+      if (!result.canceled && result.assets[0]) {
+        const image = result.assets[0];
+        const attachment: Attachment = {
+          id: Date.now().toString(),
+          type: "image",
+          name: "Photo",
+          uri: image.uri,
+        };
 
-      let newX = x;
-      let newY = y;
-
-      // Keep within screen bounds
-      if (x < 0) newX = 20;
-      if (x > screenWidth - 80) newX = screenWidth - 100;
-      if (y < 100) newY = 100;
-      if (y > screenHeight - 200) newY = screenHeight - 200;
-
-      setBubblePosition({ x: newX, y: newY });
+        setInputText((prev) => prev + `\n📸 Photo taken`);
+        setShowAttachmentMenu(false);
+      }
+    } catch (err) {
+      console.error("Error taking photo:", err);
+      Alert.alert("Error", "Failed to take photo");
     }
   };
 
-  useEffect(() => {
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollToEnd({ animated: true });
+  const sendMessage = async () => {
+    if (!inputText.trim() || isLoading) return;
+
+    if (!isOnline) {
+      Alert.alert(
+        "AI Offline",
+        "The AI assistant is currently offline. Please try again later."
+      );
+      return;
     }
-  }, [messages]);
 
-  if (!isVisible) return null;
+    if (requestCount >= 10) {
+      Alert.alert(
+        "Rate Limit Reached",
+        "You have reached the maximum number of requests for this session."
+      );
+      return;
+    }
 
-  return (
-    <Modal
-      visible={isVisible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: inputText.trim(),
+      isUser: true,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputText("");
+    setIsLoading(true);
+    setShowAttachmentMenu(false);
+
+    // Focus input after sending
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+
+    try {
+      const geminiService = GeminiService.getInstance();
+      const response = await geminiService.chatWithDataset(userMessage.text);
+
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: response,
+        isUser: false,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+      setRequestCount((prev) => prev + 1);
+    } catch (error) {
+      console.error("Chatbot error:", error);
+      const errorMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        text: t("ai_error_message"),
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renderMessage = ({ item }: { item: Message }) => (
+    <View
+      style={[
+        styles.messageContainer,
+        item.isUser ? styles.userMessage : styles.aiMessage,
+      ]}
     >
-      <View style={styles.modalOverlay}>
-        <View style={[styles.chatContainer, { backgroundColor: colors.bg }]}>
-          {/* Header */}
-          <View style={[styles.header, { backgroundColor: colors.primary }]}>
-            <View style={styles.headerContent}>
-              <View style={styles.aiInfo}>
-                <View style={styles.aiAvatar}>
-                  <Ionicons
-                    name="chatbubble-ellipses"
-                    size={20}
-                    color="#FFFFFF"
-                  />
-                </View>
-                <View>
-                  <Text style={styles.aiName}>{t("ai_assistant")}</Text>
-                  <Text style={styles.aiStatus}>
-                    {apiKey ? t("ai_online") : t("ai_offline")}
-                  </Text>
-                </View>
-              </View>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          </View>
+      <View
+        style={[
+          styles.messageBubble,
+          {
+            backgroundColor: item.isUser ? colors.primary : colors.border,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.messageText,
+            { color: item.isUser ? "white" : colors.text },
+          ]}
+        >
+          {item.text}
+        </Text>
 
-          {/* Messages */}
-          <ScrollView
-            ref={scrollViewRef}
-            style={styles.messagesContainer}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.messagesContent}
-          >
-            {messages.map((message) => (
-              <View
-                key={message.id}
-                style={[
-                  styles.messageContainer,
-                  message.isUser ? styles.userMessage : styles.aiMessage,
-                ]}
-              >
-                <View
+        {/* Render attachments if any */}
+        {item.attachments && item.attachments.length > 0 && (
+          <View style={styles.attachmentsContainer}>
+            {item.attachments.map((attachment) => (
+              <View key={attachment.id} style={styles.attachmentItem}>
+                <Ionicons
+                  name={
+                    attachment.type === "image"
+                      ? "image"
+                      : attachment.type === "document"
+                      ? "document"
+                      : "mic"
+                  }
+                  size={16}
+                  color={
+                    item.isUser ? "rgba(255, 255, 255, 0.8)" : colors.subtext
+                  }
+                />
+                <Text
                   style={[
-                    styles.messageBubble,
-                    message.isUser
-                      ? { backgroundColor: colors.primary }
-                      : {
-                          backgroundColor: colors.cardBg,
-                          borderColor: colors.border,
-                        },
+                    styles.attachmentText,
+                    {
+                      color: item.isUser
+                        ? "rgba(255, 255, 255, 0.8)"
+                        : colors.subtext,
+                    },
                   ]}
                 >
-                  <Text
-                    style={[
-                      styles.messageText,
-                      message.isUser
-                        ? { color: "#FFFFFF" }
-                        : { color: colors.text },
-                    ]}
-                  >
-                    {message.text}
-                  </Text>
-                  {message.attachments &&
-                    message.attachments.map((attachment, index) => (
-                      <View key={index} style={styles.attachment}>
-                        <Ionicons
-                          name={
-                            attachment.type === "image" ? "image" : "document"
-                          }
-                          size={16}
-                          color={message.isUser ? "#FFFFFF" : colors.subtext}
-                        />
-                        <Text
-                          style={[
-                            styles.attachmentText,
-                            message.isUser
-                              ? { color: "#FFFFFF" }
-                              : { color: colors.subtext },
-                          ]}
-                        >
-                          {attachment.name}
-                        </Text>
-                      </View>
-                    ))}
-                </View>
-                <Text style={[styles.messageTime, { color: colors.subtext }]}>
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {attachment.name}
                 </Text>
               </View>
             ))}
-            {isLoading && (
-              <View style={styles.typingContainer}>
+          </View>
+        )}
+
+        <Text
+          style={[
+            styles.messageTime,
+            {
+              color: item.isUser ? "rgba(255, 255, 255, 0.7)" : colors.subtext,
+            },
+          ]}
+        >
+          {item.timestamp.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </Text>
+      </View>
+    </View>
+  );
+
+  const renderHeader = () => (
+    <View style={styles.messagesHeader}>
+      <Text style={[styles.headerText, { color: colors.subtext }]}>
+        {messages.length === 1
+          ? "Start a conversation"
+          : `${messages.length - 1} messages`}
+      </Text>
+    </View>
+  );
+
+  const renderAttachmentMenu = () => (
+    <View style={[styles.attachmentMenu, { backgroundColor: colors.cardBg }]}>
+      <TouchableOpacity style={styles.attachmentOption} onPress={pickDocument}>
+        <Ionicons name="document-outline" size={24} color={colors.primary} />
+        <Text style={[styles.attachmentOptionText, { color: colors.text }]}>
+          Document
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.attachmentOption} onPress={pickImage}>
+        <Ionicons name="images-outline" size={24} color={colors.primary} />
+        <Text style={[styles.attachmentOptionText, { color: colors.text }]}>
+          Gallery
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.attachmentOption} onPress={takePhoto}>
+        <Ionicons name="camera-outline" size={24} color={colors.primary} />
+        <Text style={[styles.attachmentOptionText, { color: colors.text }]}>
+          Camera
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
+      <KeyboardAvoidingView
+        style={[styles.container, { backgroundColor: colors.bg }]}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+        {/* Header */}
+        <View
+          style={[
+            styles.header,
+            {
+              backgroundColor: colors.cardBg,
+              borderBottomColor: colors.border,
+            },
+          ]}
+        >
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <Ionicons name="close" size={24} color={colors.text} />
+          </TouchableOpacity>
+
+          <View style={styles.headerContent}>
+            <View style={styles.aiInfo}>
+              <Text style={[styles.aiName, { color: colors.text }]}>
+                AI Assistant
+              </Text>
+              <View style={styles.statusContainer}>
                 <View
                   style={[
-                    styles.typingBubble,
-                    { backgroundColor: colors.cardBg },
+                    styles.statusDot,
+                    {
+                      backgroundColor: isOnline
+                        ? colors.success
+                        : colors.danger,
+                    },
+                  ]}
+                />
+                <Text style={[styles.statusText, { color: colors.subtext }]}>
+                  {isOnline ? "Online" : "Offline"}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.headerRight}>
+              <View
+                style={[
+                  styles.requestBadge,
+                  { backgroundColor: colors.primary + "20" },
+                ]}
+              >
+                <Text style={[styles.requestCount, { color: colors.primary }]}>
+                  {requestCount}/10
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Messages */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={(item) => item.id}
+          style={styles.messagesList}
+          contentContainerStyle={[
+            styles.messagesContent,
+            { paddingBottom: keyboardVisible ? 20 : 40 },
+          ]}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={renderHeader}
+          ListFooterComponent={
+            isLoading ? (
+              <View style={styles.loadingContainer}>
+                <View
+                  style={[
+                    styles.loadingBubble,
+                    { backgroundColor: colors.border },
                   ]}
                 >
                   <ActivityIndicator size="small" color={colors.primary} />
-                  <Text style={[styles.typingText, { color: colors.subtext }]}>
+                  <Text style={[styles.loadingText, { color: colors.subtext }]}>
                     {t("ai_typing")}
                   </Text>
                 </View>
               </View>
-            )}
-          </ScrollView>
+            ) : null
+          }
+          onContentSizeChange={() => {
+            if (messages.length > 0) {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }
+          }}
+        />
 
-          {/* Input Area */}
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={[styles.inputContainer, { backgroundColor: colors.cardBg }]}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-          >
-            {showAttachments && (
-              <View style={styles.attachmentOptions}>
-                <TouchableOpacity
-                  style={[
-                    styles.attachmentOption,
-                    { backgroundColor: colors.primary },
-                  ]}
-                  onPress={pickImage}
-                >
-                  <Ionicons name="image" size={20} color="#FFFFFF" />
-                  <Text style={styles.attachmentOptionText}>Photo</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.attachmentOption,
-                    { backgroundColor: colors.primary },
-                  ]}
-                  onPress={pickDocument}
-                >
-                  <Ionicons name="document" size={20} color="#FFFFFF" />
-                  <Text style={styles.attachmentOptionText}>Document</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+        {/* Attachment Menu */}
+        {showAttachmentMenu && renderAttachmentMenu()}
 
-            <View style={styles.inputRow}>
-              <TouchableOpacity
-                style={[
-                  styles.attachButton,
-                  { backgroundColor: colors.primary },
-                ]}
-                onPress={() => setShowAttachments(!showAttachments)}
-              >
-                <Ionicons name="add" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
+        {/* Input */}
+        <View
+          style={[
+            styles.inputContainer,
+            {
+              borderTopColor: colors.border,
+              backgroundColor: colors.cardBg,
+            },
+          ]}
+        >
+          <View style={styles.inputWrapper}>
+            <TouchableOpacity
+              style={styles.attachmentButton}
+              onPress={() => setShowAttachmentMenu(!showAttachmentMenu)}
+            >
+              <Ionicons name="add" size={24} color={colors.primary} />
+            </TouchableOpacity>
 
-              <TextInput
-                style={[
-                  styles.textInput,
-                  {
-                    color: colors.text,
-                    backgroundColor: colors.bg,
-                    borderColor: colors.border,
-                  },
-                ]}
-                placeholder={t("ai_placeholder")}
-                placeholderTextColor={colors.subtext}
-                value={inputText}
-                onChangeText={setInputText}
-                multiline
-                maxLength={500}
-              />
+            <TextInput
+              ref={inputRef}
+              style={[
+                styles.textInput,
+                {
+                  backgroundColor: colors.bg,
+                  color: colors.text,
+                  borderColor: colors.border,
+                },
+              ]}
+              placeholder={t("ai_placeholder")}
+              placeholderTextColor={colors.subtext}
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+              maxLength={500}
+              editable={!isLoading}
+              onSubmitEditing={sendMessage}
+              blurOnSubmit={false}
+              returnKeyType="send"
+              textAlignVertical="center"
+            />
 
-              <TouchableOpacity
-                style={[
-                  styles.sendButton,
-                  {
-                    backgroundColor: inputText.trim()
+            <SpeechToText
+              onTranscriptionComplete={handleSpeechTranscription}
+              onPartialTranscription={handlePartialTranscription}
+              disabled={isLoading}
+            />
+
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                {
+                  backgroundColor:
+                    inputText.trim() && !isLoading
                       ? colors.primary
-                      : colors.subtext,
-                  },
-                ]}
-                onPress={sendMessage}
-                disabled={!inputText.trim() && !showAttachments}
-              >
-                <Ionicons name="send" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
+                      : colors.border,
+                },
+              ]}
+              onPress={sendMessage}
+              disabled={!inputText.trim() || isLoading}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="send"
+                size={20}
+                color={
+                  inputText.trim() && !isLoading ? "white" : colors.subtext
+                }
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Character count */}
+          <Text style={[styles.charCount, { color: colors.subtext }]}>
+            {inputText.length}/500
+          </Text>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
 
+const { width } = Dimensions.get("window");
+
 const styles = StyleSheet.create({
-  modalOverlay: {
+  container: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  chatContainer: {
-    flex: 1,
-    marginTop: 100,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: "hidden",
   },
   header: {
-    paddingTop: 20,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  closeButton: {
+    padding: 8,
+    marginRight: 12,
   },
   headerContent: {
+    flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
   aiInfo: {
+    flex: 1,
+  },
+  aiName: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 2,
+  },
+  statusContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
-  aiAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
   },
-  aiName: {
-    color: "#FFFFFF",
-    fontSize: 16,
+  statusText: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  headerRight: {
+    alignItems: "flex-end",
+  },
+  requestBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  requestCount: {
+    fontSize: 12,
     fontWeight: "600",
   },
-  aiStatus: {
-    color: "rgba(255, 255, 255, 0.8)",
-    fontSize: 12,
-  },
-  closeButton: {
-    padding: 8,
-  },
-  messagesContainer: {
+  messagesList: {
     flex: 1,
   },
   messagesContent: {
-    padding: 16,
-    paddingBottom: 8,
+    paddingHorizontal: 16,
+  },
+  messagesHeader: {
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0, 0, 0, 0.05)",
+    marginBottom: 8,
+  },
+  headerText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
   messageContainer: {
     marginBottom: 16,
@@ -484,101 +657,113 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   messageBubble: {
-    maxWidth: "80%",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 20,
-    borderWidth: 1,
+    maxWidth: width * 0.75,
+    padding: 12,
+    borderRadius: 18,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   messageText: {
     fontSize: 16,
     lineHeight: 22,
+    marginBottom: 4,
   },
-  attachment: {
+  attachmentsContainer: {
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  attachmentItem: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 8,
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    marginBottom: 4,
   },
   attachmentText: {
     fontSize: 12,
-    marginLeft: 6,
+    marginLeft: 4,
   },
   messageTime: {
     fontSize: 11,
-    marginTop: 4,
-    marginHorizontal: 8,
+    alignSelf: "flex-end",
+    opacity: 0.7,
   },
-  typingContainer: {
+  loadingContainer: {
     alignItems: "flex-start",
     marginBottom: 16,
   },
-  typingBubble: {
+  loadingBubble: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(0, 0, 0, 0.1)",
+    padding: 12,
+    borderRadius: 18,
+    maxWidth: width * 0.75,
   },
-  typingText: {
+  loadingText: {
     fontSize: 14,
     marginLeft: 8,
   },
-  inputContainer: {
-    padding: 16,
-    paddingBottom: Platform.OS === "ios" ? 34 : 16, // Extra padding for iOS
+  attachmentMenu: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderTopWidth: 1,
     borderTopColor: "rgba(0, 0, 0, 0.1)",
   },
-  attachmentOptions: {
-    flexDirection: "row",
-    marginBottom: 12,
-    gap: 12,
-  },
   attachmentOption: {
-    flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    gap: 6,
+    padding: 8,
   },
   attachmentOptionText: {
-    color: "#FFFFFF",
     fontSize: 12,
+    marginTop: 4,
     fontWeight: "500",
   },
-  inputRow: {
+  inputContainer: {
+    padding: 16,
+    borderTopWidth: 1,
+  },
+  inputWrapper: {
     flexDirection: "row",
     alignItems: "flex-end",
     gap: 8,
   },
-  attachButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  attachmentButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
   },
   textInput: {
     flex: 1,
-    minHeight: 40,
-    maxHeight: 100,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
     borderWidth: 1,
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     fontSize: 16,
+    maxHeight: 100,
+    minHeight: 44,
   },
   sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  charCount: {
+    fontSize: 12,
+    textAlign: "right",
+    marginTop: 4,
+    marginRight: 4,
   },
 });

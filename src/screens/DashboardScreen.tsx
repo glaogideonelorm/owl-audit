@@ -18,6 +18,7 @@ import { Section } from "@components/Section";
 import { PrimaryButton, GhostButton } from "@components/Buttons";
 import { QuickAction } from "@components/QuickAction";
 import { ProgressIndicator } from "@components/ProgressIndicator";
+import { ChatbotStatus } from "@components/ChatbotStatus";
 import { storageService, RecentActivity } from "../services/storageService";
 
 type Props = NativeStackScreenProps<any>;
@@ -25,8 +26,11 @@ type Props = NativeStackScreenProps<any>;
 export default function DashboardScreen({ navigation }: Props) {
   const { colors, t, formatCurrency } = useTheme();
   const [showAIChatbot, setShowAIChatbot] = useState(false);
-  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
-  
+  const [isAIOffline, setIsAIOffline] = useState(false);
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>(
+    []
+  );
+
   // Animation values
   const [revenueAnim] = useState(new Animated.Value(0));
   const [expensesAnim] = useState(new Animated.Value(0));
@@ -163,14 +167,17 @@ export default function DashboardScreen({ navigation }: Props) {
               Monitor your business performance and audit status
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.profileButton}
-            onPress={() => navigation.navigate("Profile")}
-          >
-            <View style={styles.profileImage}>
-              <Ionicons name="person" size={24} color={colors.primary} />
-            </View>
-          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            <ChatbotStatus isOnline={!isAIOffline} />
+            <TouchableOpacity
+              style={styles.profileButton}
+              onPress={() => navigation.navigate("Profile")}
+            >
+              <View style={styles.profileImage}>
+                <Ionicons name="person" size={24} color={colors.primary} />
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
 
@@ -360,9 +367,9 @@ export default function DashboardScreen({ navigation }: Props) {
 
       {/* AI Chatbot - Floating Bubble */}
       <AIChatbot
-        isVisible={showAIChatbot}
+        visible={showAIChatbot}
         onClose={() => setShowAIChatbot(false)}
-        apiKey={undefined}
+        isOnline={!isAIOffline}
       />
 
       {/* Floating AI Button */}
@@ -394,6 +401,11 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
   },
   companyName: {
     fontSize: 16,

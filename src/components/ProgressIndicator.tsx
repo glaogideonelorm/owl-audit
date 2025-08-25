@@ -69,22 +69,22 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
               <Text
                 style={[
                   styles.stepTitle,
-                  { color: step.status === "pending" ? colors.subtext : colors.text },
+                  {
+                    color:
+                      step.status === "pending" ? colors.subtext : colors.text,
+                  },
                 ]}
               >
                 {step.title}
               </Text>
-              <Text
-                style={[
-                  styles.stepDescription,
-                  { color: colors.subtext },
-                ]}
-              >
+              <Text style={[styles.stepDescription, { color: colors.subtext }]}>
                 {step.description}
               </Text>
             </View>
             {step.status === "completed" && (
-              <View style={[styles.checkmark, { backgroundColor: colors.success }]}>
+              <View
+                style={[styles.checkmark, { backgroundColor: colors.success }]}
+              >
                 <Ionicons name="checkmark" size={12} color="#FFFFFF" />
               </View>
             )}
@@ -95,7 +95,9 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
                 styles.connector,
                 {
                   backgroundColor:
-                    step.status === "completed" ? colors.success : colors.border,
+                    step.status === "completed"
+                      ? colors.success
+                      : colors.border,
                 },
               ]}
             />
