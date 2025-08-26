@@ -1,8 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { ColorValue } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { currencyService } from "../services/currencyService";
 import { i18nService } from "../services/i18nService";
-import { useTranslation } from "../hooks/useTranslation";
 
 const THEME_STORAGE_KEY = "audit_demo:theme";
 const CURRENCY_STORAGE_KEY = "audit_demo:currency";
@@ -72,7 +72,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   const [darkMode, setDarkMode] = useState(false);
   const [currency, setCurrencyState] = useState<Currency>("USD");
   const [language, setLanguageState] = useState<Language>("en");
-  const { t } = useTranslation();
 
   useEffect(() => {
     loadTheme();
@@ -151,6 +150,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const formatCurrency = (amount: number): string => {
     return currencyService.formatAmount(amount, currency);
+  };
+
+  const t = (key: string): string => {
+    return i18nService.t(key);
   };
 
   const colors = darkMode ? darkColors : lightColors;

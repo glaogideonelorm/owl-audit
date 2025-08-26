@@ -1,5 +1,5 @@
 
-import { Recommendation, Audit, Snapshot, FileItem } from '@types/index';
+import { Recommendation, Audit, Snapshot, FileItem } from '../types/index';
 
 export const mockSnapshot: Snapshot = {
   revenue: 106435,

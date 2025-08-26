@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { View, ViewProps, StyleSheet } from 'react-native';
 import { useTheme } from '@theme/index';
@@ -6,7 +5,7 @@ import { useTheme } from '@theme/index';
 export const Card: React.FC<ViewProps> = ({ style, children, ...rest }) => {
   const { colors } = useTheme();
   return (
-    <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }, style]} {...rest}>
+    <View style={[styles.card, { backgroundColor: colors.cardBg, borderColor: colors.border }, style]} {...rest}>
       {children}
     </View>
   );

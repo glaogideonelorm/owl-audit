@@ -7,13 +7,11 @@ import {
   StyleSheet,
   Alert,
   Modal,
-  Image,
 } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useTheme } from "@theme/index";
 import { Ionicons } from "@expo/vector-icons";
 import { Card } from "@components/Card";
-import { ListItem } from "@components/ListItem";
 import { ToggleRow } from "@components/ToggleRow";
 import { currencyService } from "../services/currencyService";
 import { i18nService } from "../services/i18nService";

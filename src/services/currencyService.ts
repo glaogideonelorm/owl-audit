@@ -1,4 +1,4 @@
-import { Currency, CurrencyInfo } from "@types/index";
+import { Currency, CurrencyInfo } from "../types/index";
 
 // Real-time exchange rates (you would typically fetch these from an API)
 const EXCHANGE_RATES: Record<Currency, CurrencyInfo> = {
@@ -83,7 +83,7 @@ export class CurrencyService {
       // const data = await response.json();
       // Update EXCHANGE_RATES with fresh data
 
-      console.log("Exchange rates updated (mock)");
+      // Exchange rates updated (mock)
     } catch (error) {
       console.error("Failed to update exchange rates:", error);
     }

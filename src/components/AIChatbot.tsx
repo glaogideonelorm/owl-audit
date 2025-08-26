@@ -128,8 +128,7 @@ export const AIChatbot: React.FC<AIChatbotProps> = ({
   };
 
   const handlePartialTranscription = (text: string) => {
-    // Optionally show partial text in a different way
-    console.log("Partial transcription:", text);
+    
   };
 
   const pickDocument = async () => {
